@@ -1,106 +1,125 @@
-print("=== BOAT AI 予想エンジン ===")
+import json
 
-boats = [
-    {
-        "number": 1,
-        "win_rate": 6.80,
-        "local_rate": 7.10,
-        "motor_rate": 42.5,
-        "st": 0.15,
-    },
-    {
-        "number": 2,
-        "win_rate": 6.20,
-        "local_rate": 6.50,
-        "motor_rate": 38.2,
-        "st": 0.16,
-    },
-    {
-        "number": 3,
-        "win_rate": 6.50,
-        "local_rate": 6.80,
-        "motor_rate": 45.1,
-        "st": 0.14,
-    },
-    {
-        "number": 4,
-        "win_rate": 5.90,
-        "local_rate": 6.10,
-        "motor_rate": 40.8,
-        "st": 0.17,
-    },
-    {
-        "number": 5,
-        "win_rate": 5.50,
-        "local_rate": 5.80,
-        "motor_rate": 35.4,
-        "st": 0.18,
-    },
-    {
-        "number": 6,
-        "win_rate": 5.20,
-        "local_rate": 5.60,
-        "motor_rate": 37.9,
-        "st": 0.19,
-    },
-]
+import urllib.request
 
+URL = "https://boatraceopenapi.github.io/api/v1/today.json"
+
+def get_data():
+
+    with urllib.request.urlopen(URL, timeout=10) as response:
+
+        return json.load(response)
 
 def calculate_score(boat):
+
     score = 0
 
     # 全国勝率
-    score += boat["win_rate"] * 10
+
+    score += boat.get("national_win_rate", 0) * 10
 
     # 当地勝率
-    score += boat["local_rate"] * 8
 
-    # モーター
-    score += boat["motor_rate"] * 0.5
+    score += boat.get("local_win_rate", 0) * 8
 
-    # STは小さいほど有利
-    score += (0.20 - boat["st"]) * 100
+    # モーター2連対率
 
-    # 1号艇のコース優位
-    if boat["number"] == 1:
+    score += boat.get("motor_top_2_percent", 0) * 0.5
+
+    # 平均スタートが速いほど加点
+
+    st = boat.get("average_start_timing", 0.2)
+
+    score += (0.20 - st) * 100
+
+    # 1号艇を少し加点
+
+    if boat.get("entry_number") == 1:
+
         score += 15
 
     return score
 
+data = get_data()
 
-for boat in boats:
-    boat["score"] = calculate_score(boat)
+stadiums = data["programs"]["stadiums"]
 
+print("=== BOAT AI 今日の予想 ===")
 
-ranking = sorted(
-    boats,
-    key=lambda x: x["score"],
-    reverse=True
-)
+print(f"競艇場数: {len(stadiums)}")
 
+for stadium_number, stadium in stadiums.items():
 
-print("\n=== AI予想順位 ===")
+    races = stadium.get("races", {})
 
-for i, boat in enumerate(ranking, start=1):
-    print(
-        f"{i}位：{boat['number']}号艇 "
-        f"スコア {boat['score']:.2f}"
-    )
+    for race_number, race in races.items():
 
+        racers = race.get("racers", {})
 
-print("\n=== AI本命 ===")
-print(f"{ranking[0]['number']}号艇")
+        boats = []
 
-print("\n=== AI上位3艇 ===")
+        for entry_number, boat in racers.items():
 
-top3 = [boat["number"] for boat in ranking[:3]]
+            boat["entry_number"] = int(entry_number)
 
-print(top3)
+            boat["score"] = calculate_score(boat)
 
-print("\n=== 3連単候補 ===")
+            boats.append(boat)
 
-for first in top3:
-    for second in top3:
-        for third in top3:
-            if len({first, second, third}) == 3:
-                print(f"{first}-{second}-{third}")
+        if len(boats) != 6:
+
+            continue
+
+        ranking = sorted(
+
+            boats,
+
+            key=lambda x: x["score"],
+
+            reverse=True
+
+        )
+
+        print()
+
+        print(
+
+            f"競艇場 {stadium_number} "
+
+            f"第{race_number}R"
+
+        )
+
+        print(
+
+            "AI順位:",
+
+            " → ".join(
+
+                str(boat["entry_number"])
+
+                for boat in ranking
+
+            )
+
+        )
+
+        top3 = [
+
+            boat["entry_number"]
+
+            for boat in ranking[:3]
+
+        ]
+
+        print("AI上位3艇:", top3)
+
+        print(
+
+            "本命:",
+
+            ranking[0]["entry_number"],
+
+            "号艇"
+
+        )
