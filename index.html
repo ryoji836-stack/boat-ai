@@ -53,6 +53,11 @@
       margin-top: 0;
     }
 
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+
     select,
     button {
       width: 100%;
@@ -75,8 +80,8 @@
       cursor: pointer;
     }
 
-    button:hover {
-      opacity: 0.9;
+    button:disabled {
+      opacity: 0.6;
     }
 
     .prediction {
@@ -99,11 +104,30 @@
       border-radius: 12px;
     }
 
+    .ranking {
+      margin-top: 20px;
+    }
+
+    .boat {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px;
+      margin-top: 8px;
+      background: #202b4a;
+      border-radius: 10px;
+    }
+
     .note {
       color: #8f9bb8;
       font-size: 13px;
       line-height: 1.6;
       margin-top: 20px;
+    }
+
+    .status {
+      margin-top: 15px;
+      color: #aab6d3;
+      text-align: center;
     }
 
     footer {
@@ -125,66 +149,47 @@
 <main>
 
   <div class="card">
+
     <h2>今日のAI予想</h2>
 
     <label for="stadium">競艇場</label>
-
     <select id="stadium">
-      <option>桐生</option>
-      <option>戸田</option>
-      <option>江戸川</option>
-      <option>平和島</option>
-      <option>多摩川</option>
-      <option>浜名湖</option>
-      <option>蒲郡</option>
-      <option>常滑</option>
-      <option>津</option>
-      <option>三国</option>
-      <option>びわこ</option>
-      <option>住之江</option>
-      <option>尼崎</option>
+      <option value="">読み込み中...</option>
     </select>
 
     <label for="race">レース</label>
-
     <select id="race">
-      <option>1R</option>
-      <option>2R</option>
-      <option>3R</option>
-      <option>4R</option>
-      <option>5R</option>
-      <option>6R</option>
-      <option>7R</option>
-      <option>8R</option>
-      <option>9R</option>
-      <option>10R</option>
-      <option>11R</option>
-      <option>12R</option>
+      <option value="">---</option>
     </select>
 
-    <button onclick="showPrediction()">
+    <button id="predictButton" onclick="showPrediction()">
       AI予想を見る
     </button>
+
+    <div id="status" class="status"></div>
 
     <div id="prediction" class="prediction">
 
       <h2>AI予想</h2>
 
-      <div class="main-number">
-        🥇 1号艇
+      <div id="mainNumber" class="main-number">
+        ---
       </div>
 
-      <div class="top3">
+      <div id="top3" class="top3">
         AI上位3艇<br>
-        1 → 3 → 2
+        ---
       </div>
+
+      <div id="ranking" class="ranking"></div>
 
       <p class="note">
-        ※現在はAIスコアモデルによる試作版です。<br>
+        ※AIスコアモデルによる試作版です。<br>
         実際のレース結果や払戻を保証するものではありません。
       </p>
 
     </div>
+
   </div>
 
 </main>
@@ -194,9 +199,275 @@
 </footer>
 
 <script>
-  function showPrediction() {
-    document.getElementById("prediction").style.display = "block";
+
+const API_URL =
+  "https://boatraceopenapi.github.io/api/v1/today.json";
+
+const stadiumNames = {
+  "01": "桐生",
+  "02": "戸田",
+  "03": "江戸川",
+  "04": "平和島",
+  "05": "多摩川",
+  "06": "浜名湖",
+  "07": "蒲郡",
+  "08": "常滑",
+  "09": "津",
+  "10": "三国",
+  "11": "びわこ",
+  "12": "住之江",
+  "13": "尼崎",
+  "14": "鳴門",
+  "15": "丸亀",
+  "16": "児島",
+  "17": "宮島",
+  "18": "徳山",
+  "19": "下関",
+  "20": "若松",
+  "21": "芦屋",
+  "22": "福岡",
+  "23": "唐津",
+  "24": "大村"
+};
+
+let data = null;
+
+function calculateScore(boat) {
+
+  let score = 0;
+
+  score +=
+    (boat.national_win_rate || 0) * 10;
+
+  score +=
+    (boat.local_win_rate || 0) * 8;
+
+  score +=
+    (boat.motor_top_2_percent || 0) * 0.5;
+
+  const st =
+    boat.average_start_timing || 0.20;
+
+  score +=
+    (0.20 - st) * 100;
+
+  if (Number(boat.entry_number) === 1) {
+    score += 15;
   }
+
+  return score;
+}
+
+
+async function loadData() {
+
+  const status =
+    document.getElementById("status");
+
+  try {
+
+    status.textContent =
+      "今日の競艇データを取得中...";
+
+    const response =
+      await fetch(API_URL);
+
+    if (!response.ok) {
+      throw new Error("データ取得に失敗しました");
+    }
+
+    data = await response.json();
+
+    const stadiumSelect =
+      document.getElementById("stadium");
+
+    stadiumSelect.innerHTML = "";
+
+    const stadiums =
+      data.programs.stadiums;
+
+    for (const stadiumNumber of Object.keys(stadiums)) {
+
+      const option =
+        document.createElement("option");
+
+      const number =
+        stadiumNumber.padStart(2, "0");
+
+      option.value = stadiumNumber;
+
+      option.textContent =
+        stadiumNames[number] ||
+        "競艇場 " + stadiumNumber;
+
+      stadiumSelect.appendChild(option);
+    }
+
+    stadiumSelect.dispatchEvent(
+      new Event("change")
+    );
+
+    status.textContent =
+      "データ取得完了！";
+
+  } catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      "データ取得エラー: " + error.message;
+  }
+}
+
+
+document
+  .getElementById("stadium")
+  .addEventListener("change", function() {
+
+    if (!data) return;
+
+    const stadiumNumber =
+      this.value;
+
+    const stadium =
+      data.programs.stadiums[stadiumNumber];
+
+    const raceSelect =
+      document.getElementById("race");
+
+    raceSelect.innerHTML = "";
+
+    const races =
+      stadium.races || {};
+
+    for (const raceNumber of Object.keys(races)) {
+
+      const option =
+        document.createElement("option");
+
+      option.value = raceNumber;
+
+      option.textContent =
+        raceNumber + "R";
+
+      raceSelect.appendChild(option);
+    }
+  });
+
+
+function showPrediction() {
+
+  if (!data) {
+
+    alert("データを読み込み中です。少し待ってください。");
+
+    return;
+  }
+
+  const stadiumNumber =
+    document.getElementById("stadium").value;
+
+  const raceNumber =
+    document.getElementById("race").value;
+
+  const stadium =
+    data.programs.stadiums[stadiumNumber];
+
+  const race =
+    stadium.races[raceNumber];
+
+  if (!race) {
+
+    alert("レースデータがありません。");
+
+    return;
+  }
+
+  const racers =
+    race.racers || {};
+
+  const boats = [];
+
+  for (const entryNumber in racers) {
+
+    const boat =
+      racers[entryNumber];
+
+    boat.entry_number =
+      Number(entryNumber);
+
+    boat.score =
+      calculateScore(boat);
+
+    boats.push(boat);
+  }
+
+  if (boats.length === 0) {
+
+    alert("選択したレースの選手データがありません。");
+
+    return;
+  }
+
+  const ranking =
+    boats.sort(
+      (a, b) => b.score - a.score
+    );
+
+  const main =
+    ranking[0].entry_number;
+
+  const top3 =
+    ranking
+      .slice(0, 3)
+      .map(boat => boat.entry_number)
+      .join(" → ");
+
+  document
+    .getElementById("mainNumber")
+    .textContent =
+      "🥇 " + main + "号艇";
+
+  document
+    .getElementById("top3")
+    .innerHTML =
+      "AI上位3艇<br>" + top3;
+
+  const rankingElement =
+    document.getElementById("ranking");
+
+  rankingElement.innerHTML =
+    "<h3>AIスコア順位</h3>";
+
+  ranking.forEach((boat, index) => {
+
+    const div =
+      document.createElement("div");
+
+    div.className = "boat";
+
+    div.innerHTML =
+      "<span>" +
+      (index + 1) +
+      "位　" +
+      boat.entry_number +
+      "号艇</span>" +
+      "<span>" +
+      boat.score.toFixed(1) +
+      "</span>";
+
+    rankingElement.appendChild(div);
+  });
+
+  document
+    .getElementById("prediction")
+    .style.display =
+      "block";
+}
+
+
+loadData();
+
 </script>
 
 </body>
