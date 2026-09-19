@@ -335,13 +335,18 @@ while current_date <= END_DATE:
 
     except Exception as e:
 
-        error_count += 1
+    error_count += 1
 
-        print(
-            f"{date_string}: "
-            f"取得スキップ"
-        )
+    print(
+        f"{date_string}: "
+        f"取得スキップ"
+    )
 
+    print(
+        "原因:",
+        e
+    )
+    
     current_date += timedelta(days=1)
 
 
