@@ -31,4 +31,4 @@ jobs:
         run: python data_test.py
 　　　　- name: Run Boat AI
 
-run: python app.py
+　　　　　run: python app.py
