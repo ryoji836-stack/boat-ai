@@ -34,6 +34,7 @@ def calculate_score(boat):
 
 
 def check_race(race):
+
     racers = race.get("racers", {})
     result = race.get("result", {})
     result_racers = result.get("racers", {})
@@ -111,7 +112,8 @@ def check_race(race):
     for payout in trifecta:
 
         combination = payout.get(
-            "combination", ""
+            "combination",
+            ""
         )
 
         expected = (
@@ -123,7 +125,8 @@ def check_race(race):
         if combination == expected:
 
             trifecta_return += payout.get(
-                "amount", 0
+                "amount",
+                0
             )
 
     return {
@@ -131,18 +134,19 @@ def check_race(race):
         "main_top3": main_top3,
         "top3_hit": top3_hit,
         "trifecta_hit": trifecta_hit,
-        "trifecta_return": trifecta_return,
+        "trifecta_return": trifecta_return
     }
 
 
 def empty_stats():
+
     return {
         "races": 0,
         "main_win": 0,
         "main_top3": 0,
         "top3_hit": 0,
         "trifecta_hit": 0,
-        "trifecta_return": 0,
+        "trifecta_return": 0
     }
 
 
@@ -177,23 +181,33 @@ def print_stats(name, stats):
     print("================================")
 
     if races == 0:
+
         print("検証レースなし")
+
         return
 
     main_win_rate = (
-        stats["main_win"] / races * 100
+        stats["main_win"]
+        / races
+        * 100
     )
 
     main_top3_rate = (
-        stats["main_top3"] / races * 100
+        stats["main_top3"]
+        / races
+        * 100
     )
 
     top3_hit_rate = (
-        stats["top3_hit"] / races * 100
+        stats["top3_hit"]
+        / races
+        * 100
     )
 
     trifecta_hit_rate = (
-        stats["trifecta_hit"] / races * 100
+        stats["trifecta_hit"]
+        / races
+        * 100
     )
 
     investment = races * 100
@@ -204,7 +218,10 @@ def print_stats(name, stats):
         * 100
     )
 
-    print("検証レース数:", races)
+    print(
+        "検証レース数:",
+        races
+    )
 
     print(
         f"本命1着率: "
@@ -245,29 +262,42 @@ def print_stats(name, stats):
 print("================================")
 print(" BOAT AI 全期間データ検証")
 print("================================")
+
 print(
     "開始日:",
     START_DATE.strftime("%Y-%m-%d")
 )
+
 print(
     "終了日:",
     END_DATE.strftime("%Y-%m-%d")
 )
+
 print()
 
 
 all_stats = empty_stats()
+
 first_half_stats = empty_stats()
+
 second_half_stats = empty_stats()
 
+
 current_date = START_DATE
+
 download_count = 0
+
 error_count = 0
+
+error_dates = []
 
 
 while current_date <= END_DATE:
 
-    date_string = current_date.strftime("%Y%m%d")
+    date_string = current_date.strftime(
+        "%Y%m%d"
+    )
+
     year = date_string[:4]
 
     url = (
@@ -296,7 +326,10 @@ while current_date <= END_DATE:
 
         for stadium in stadiums.values():
 
-            races = stadium.get("races", {})
+            races = stadium.get(
+                "races",
+                {}
+            )
 
             for race in races.values():
 
@@ -335,18 +368,22 @@ while current_date <= END_DATE:
 
     except Exception as e:
 
-    error_count += 1
+        error_count += 1
 
-    print(
-        f"{date_string}: "
-        f"取得スキップ"
-    )
+        error_dates.append(
+            date_string
+        )
 
-    print(
-        "原因:",
-        e
-    )
-    
+        print(
+            f"{date_string}: "
+            f"取得スキップ"
+        )
+
+        print(
+            "原因:",
+            e
+        )
+
     current_date += timedelta(days=1)
 
 
@@ -354,14 +391,29 @@ print()
 print("================================")
 print(" データ取得終了")
 print("================================")
+
 print(
     "取得成功日数:",
     download_count
 )
+
 print(
     "取得エラー日数:",
     error_count
 )
+
+
+if error_dates:
+
+    print()
+    print("取得エラーの日付:")
+
+    for date in error_dates:
+
+        print(
+            "-",
+            date
+        )
 
 
 print_stats(
