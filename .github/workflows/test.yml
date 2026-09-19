@@ -29,6 +29,6 @@ jobs:
       - name: Run data test
 
         run: python data_test.py
-- name: Run Boat AI
+　　　　- name: Run Boat AI
 
-  run: python app.py
+run: python app.py
