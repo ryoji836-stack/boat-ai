@@ -10,34 +10,93 @@ START_DATE = datetime(2026, 1, 1, tzinfo=JST)
 END_DATE = datetime.now(JST) - timedelta(days=1)
 
 
+STADIUM_NAMES = {
+    "01": "桐生",
+    "02": "戸田",
+    "03": "江戸川",
+    "04": "平和島",
+    "05": "多摩川",
+    "06": "浜名湖",
+    "07": "蒲郡",
+    "08": "常滑",
+    "09": "津",
+    "10": "三国",
+    "11": "びわこ",
+    "12": "住之江",
+    "13": "尼崎",
+    "14": "鳴門",
+    "15": "丸亀",
+    "16": "児島",
+    "17": "宮島",
+    "18": "徳山",
+    "19": "下関",
+    "20": "若松",
+    "21": "芦屋",
+    "22": "福岡",
+    "23": "唐津",
+    "24": "大村"
+}
+
+
 def calculate_score(boat):
+
     score = 0
 
-    # 全国勝率
-    score += boat.get("national_win_rate", 0) * 10
+    score += boat.get(
+        "national_win_rate", 0
+    ) * 10
 
-    # 当地勝率
-    score += boat.get("local_win_rate", 0) * 8
+    score += boat.get(
+        "local_win_rate", 0
+    ) * 8
 
-    # モーター2連対率
-    score += boat.get("motor_top_2_percent", 0) * 0.5
+    score += boat.get(
+        "motor_top_2_percent", 0
+    ) * 0.5
 
-    # 平均スタート
-    st = boat.get("average_start_timing", 0.20)
-    score += (0.20 - st) * 100
+    st = boat.get(
+        "average_start_timing",
+        0.20
+    )
 
-    # 1号艇補正
+    score += (
+        0.20 - st
+    ) * 100
+
     if boat.get("entry_number") == 1:
         score += 15
 
     return score
 
 
+def empty_stats():
+
+    return {
+        "races": 0,
+        "main_win": 0,
+        "main_top3": 0,
+        "top3_hit": 0,
+        "trifecta_hit": 0,
+        "trifecta_return": 0
+    }
+
+
 def check_race(race):
 
-    racers = race.get("racers", {})
-    result = race.get("result", {})
-    result_racers = result.get("racers", {})
+    racers = race.get(
+        "racers",
+        {}
+    )
+
+    result = race.get(
+        "result",
+        {}
+    )
+
+    result_racers = result.get(
+        "racers",
+        {}
+    )
 
     if len(racers) != 6:
         return None
@@ -49,8 +108,13 @@ def check_race(race):
 
     for entry_number, boat in racers.items():
 
-        boat["entry_number"] = int(entry_number)
-        boat["score"] = calculate_score(boat)
+        boat["entry_number"] = int(
+            entry_number
+        )
+
+        boat["score"] = calculate_score(
+            boat
+        )
 
         boats.append(boat)
 
@@ -73,10 +137,15 @@ def check_race(race):
 
         entry = int(entry_number)
 
-        place = result_boat.get("place_number")
+        place = result_boat.get(
+            "place_number"
+        )
 
         if place is not None:
-            actual_places[entry] = int(place)
+
+            actual_places[entry] = int(
+                place
+            )
 
     if len(actual_places) != 6:
         return None
@@ -89,37 +158,50 @@ def check_race(race):
     actual_top3 = actual_ranking[:3]
 
     main_win = (
-        actual_ranking[0] == ai_main
+        actual_ranking[0]
+        == ai_main
     )
 
     main_top3 = (
-        actual_places.get(ai_main, 99) <= 3
+        actual_places.get(
+            ai_main,
+            99
+        ) <= 3
     )
 
     top3_hit = (
-        set(ai_top3) == set(actual_top3)
+        set(ai_top3)
+        == set(actual_top3)
     )
 
     trifecta_hit = (
-        ai_top3 == actual_top3
+        ai_top3
+        == actual_top3
     )
 
     trifecta_return = 0
 
-    payouts = result.get("payouts", {})
-    trifecta = payouts.get("trifecta", [])
+    payouts = result.get(
+        "payouts",
+        {}
+    )
+
+    trifecta = payouts.get(
+        "trifecta",
+        []
+    )
+
+    expected = (
+        f"{ai_top3[0]}-"
+        f"{ai_top3[1]}-"
+        f"{ai_top3[2]}"
+    )
 
     for payout in trifecta:
 
         combination = payout.get(
             "combination",
             ""
-        )
-
-        expected = (
-            f"{ai_top3[0]}-"
-            f"{ai_top3[1]}-"
-            f"{ai_top3[2]}"
         )
 
         if combination == expected:
@@ -135,18 +217,6 @@ def check_race(race):
         "top3_hit": top3_hit,
         "trifecta_hit": trifecta_hit,
         "trifecta_return": trifecta_return
-    }
-
-
-def empty_stats():
-
-    return {
-        "races": 0,
-        "main_win": 0,
-        "main_top3": 0,
-        "top3_hit": 0,
-        "trifecta_hit": 0,
-        "trifecta_return": 0
     }
 
 
@@ -171,96 +241,8 @@ def add_result(stats, result):
     ]
 
 
-def print_stats(name, stats):
-
-    races = stats["races"]
-
-    print()
-    print("================================")
-    print(name)
-    print("================================")
-
-    if races == 0:
-
-        print("検証レースなし")
-
-        return
-
-    main_win_rate = (
-        stats["main_win"]
-        / races
-        * 100
-    )
-
-    main_top3_rate = (
-        stats["main_top3"]
-        / races
-        * 100
-    )
-
-    top3_hit_rate = (
-        stats["top3_hit"]
-        / races
-        * 100
-    )
-
-    trifecta_hit_rate = (
-        stats["trifecta_hit"]
-        / races
-        * 100
-    )
-
-    investment = races * 100
-
-    return_rate = (
-        stats["trifecta_return"]
-        / investment
-        * 100
-    )
-
-    print(
-        "検証レース数:",
-        races
-    )
-
-    print(
-        f"本命1着率: "
-        f"{main_win_rate:.1f}%"
-    )
-
-    print(
-        f"本命3着以内率: "
-        f"{main_top3_rate:.1f}%"
-    )
-
-    print(
-        f"AI上位3艇一致率: "
-        f"{top3_hit_rate:.1f}%"
-    )
-
-    print(
-        f"3連単そのまま的中率: "
-        f"{trifecta_hit_rate:.1f}%"
-    )
-
-    print(
-        f"3連単投資額: "
-        f"{investment:,}円"
-    )
-
-    print(
-        f"3連単払戻合計: "
-        f"{stats['trifecta_return']:,}円"
-    )
-
-    print(
-        f"3連単回収率: "
-        f"{return_rate:.1f}%"
-    )
-
-
 print("================================")
-print(" BOAT AI 全期間データ検証")
+print(" BOAT AI 競艇場別データ分析")
 print("================================")
 
 print(
@@ -276,20 +258,19 @@ print(
 print()
 
 
-all_stats = empty_stats()
+stadium_stats = {}
 
-first_half_stats = empty_stats()
+for number in STADIUM_NAMES:
 
-second_half_stats = empty_stats()
+    stadium_stats[number] = (
+        empty_stats()
+    )
 
 
 current_date = START_DATE
 
 download_count = 0
-
 error_count = 0
-
-error_dates = []
 
 
 while current_date <= END_DATE:
@@ -322,9 +303,13 @@ while current_date <= END_DATE:
             .get("stadiums", {})
         )
 
-        day_races = 0
+        for stadium_number, stadium in stadiums.items():
 
-        for stadium in stadiums.values():
+            if stadium_number not in stadium_stats:
+
+                stadium_stats[stadium_number] = (
+                    empty_stats()
+                )
 
             races = stadium.get(
                 "races",
@@ -339,52 +324,19 @@ while current_date <= END_DATE:
                     continue
 
                 add_result(
-                    all_stats,
+                    stadium_stats[
+                        stadium_number
+                    ],
                     result
                 )
 
-                # 2026年1月〜6月
-                if current_date.month <= 6:
-
-                    add_result(
-                        first_half_stats,
-                        result
-                    )
-
-                # 2026年7月以降
-                else:
-
-                    add_result(
-                        second_half_stats,
-                        result
-                    )
-
-                day_races += 1
-
-        print(
-            f"{date_string}: "
-            f"{day_races}レース検証"
-        )
-
-    except Exception as e:
+    except Exception:
 
         error_count += 1
 
-        error_dates.append(
-            date_string
-        )
-
-        print(
-            f"{date_string}: "
-            f"取得スキップ"
-        )
-
-        print(
-            "原因:",
-            e
-        )
-
-    current_date += timedelta(days=1)
+    current_date += timedelta(
+        days=1
+    )
 
 
 print()
@@ -403,36 +355,88 @@ print(
 )
 
 
-if error_dates:
+print()
+print("================================")
+print(" 競艇場別結果")
+print("================================")
+
+
+for stadium_number in sorted(
+    stadium_stats.keys()
+):
+
+    stats = stadium_stats[
+        stadium_number
+    ]
+
+    races = stats["races"]
+
+    if races == 0:
+        continue
+
+    name = STADIUM_NAMES.get(
+        stadium_number.zfill(2),
+        f"競艇場{stadium_number}"
+    )
+
+    main_win_rate = (
+        stats["main_win"]
+        / races
+        * 100
+    )
+
+    main_top3_rate = (
+        stats["main_top3"]
+        / races
+        * 100
+    )
+
+    trifecta_hit_rate = (
+        stats["trifecta_hit"]
+        / races
+        * 100
+    )
+
+    investment = races * 100
+
+    return_rate = (
+        stats["trifecta_return"]
+        / investment
+        * 100
+    )
 
     print()
-    print("取得エラーの日付:")
+    print(
+        f"【{stadium_number} {name}】"
+    )
 
-    for date in error_dates:
+    print(
+        "検証レース数:",
+        races
+    )
 
-        print(
-            "-",
-            date
-        )
+    print(
+        f"本命1着率: "
+        f"{main_win_rate:.1f}%"
+    )
 
+    print(
+        f"本命3着以内率: "
+        f"{main_top3_rate:.1f}%"
+    )
 
-print_stats(
-    "2026年1月〜6月",
-    first_half_stats
-)
+    print(
+        f"3連単的中率: "
+        f"{trifecta_hit_rate:.1f}%"
+    )
 
-print_stats(
-    "2026年7月〜現在",
-    second_half_stats
-)
-
-print_stats(
-    "2026年全期間",
-    all_stats
-)
+    print(
+        f"3連単回収率: "
+        f"{return_rate:.1f}%"
+    )
 
 
 print()
 print("================================")
-print(" 全期間検証完了！")
+print(" 分析完了！")
 print("================================")
