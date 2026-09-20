@@ -5,11 +5,8 @@ from datetime import date, timedelta
 
 BASE_URL = "https://boatraceopenapi.github.io/api/v1"
 
-START_DATE = date(2026, 1, 1)
+START_DATE = date(2026, 7, 1)
 END_DATE = date(2026, 9, 19)
-
-TRAIN_END = date(2026, 6, 30)
-TEST_START = date(2026, 7, 1)
 
 
 # ==========================================
@@ -41,7 +38,112 @@ def get_day_data(target_date):
 
 
 # ==========================================
-# レースデータ作成
+# AIスコア
+# ==========================================
+
+def calculate_score(boat):
+
+    score = 0
+
+    score += (
+        boat["national_win_rate"]
+        * 8.804
+    )
+
+    score += (
+        boat["local_win_rate"]
+        * 4.059
+    )
+
+    score += (
+        boat["motor_top_2_percent"]
+        * 0.417
+    )
+
+    score += (
+        (
+            0.20
+            - boat["average_start_timing"]
+        )
+        * 117.952
+    )
+
+    if boat["entry_number"] == 1:
+
+        score += 25.603
+
+    return score
+
+
+# ==========================================
+# 数字を安全に取得
+# ==========================================
+
+def to_float(value, default=0):
+
+    try:
+
+        return float(value)
+
+    except:
+
+        return default
+
+
+# ==========================================
+# 払戻取得
+# ==========================================
+
+def get_trifecta_payout(
+    result,
+    actual_top3
+):
+
+    payouts = result.get(
+        "payouts",
+        {}
+    )
+
+    trifecta = payouts.get(
+        "trifecta",
+        []
+    )
+
+    actual_string = "".join(
+        str(x)
+        for x in actual_top3
+    )
+
+    for payout in trifecta:
+
+        combination = str(
+            payout.get(
+                "combination",
+                ""
+            )
+        )
+
+        combination = (
+            combination
+            .replace("-", "")
+            .replace(" ", "")
+            .replace("→", "")
+        )
+
+        if combination == actual_string:
+
+            return to_float(
+                payout.get(
+                    "amount",
+                    0
+                )
+            )
+
+    return 0
+
+
+# ==========================================
+# レースデータ取得
 # ==========================================
 
 def make_races():
@@ -92,10 +194,12 @@ def make_races():
                     )
 
                     if len(racers) != 6:
+
                         continue
 
 
                     boats = []
+
 
                     for entry_number, boat in racers.items():
 
@@ -112,50 +216,53 @@ def make_races():
 
                         boats.append({
 
-                            "entry_number": entry,
+                            "entry_number":
+                                entry,
 
                             "national_win_rate":
-                                float(
+                                to_float(
                                     boat.get(
                                         "national_win_rate",
                                         0
-                                    ) or 0
+                                    )
                                 ),
 
                             "local_win_rate":
-                                float(
+                                to_float(
                                     boat.get(
                                         "local_win_rate",
                                         0
-                                    ) or 0
+                                    )
                                 ),
 
                             "motor_top_2_percent":
-                                float(
+                                to_float(
                                     boat.get(
                                         "motor_top_2_percent",
                                         0
-                                    ) or 0
+                                    )
                                 ),
 
                             "average_start_timing":
-                                float(
+                                to_float(
                                     boat.get(
                                         "average_start_timing",
                                         0.20
-                                    ) or 0.20
+                                    ),
+                                    0.20
                                 ),
 
                         })
 
 
                     if len(boats) != 6:
+
                         continue
 
 
-                    # ==================================
+                    # ==============================
                     # 実際の結果
-                    # ==================================
+                    # ==============================
 
                     result = race.get(
                         "result",
@@ -168,6 +275,7 @@ def make_races():
                     )
 
                     if len(result_racers) < 3:
+
                         continue
 
 
@@ -215,6 +323,7 @@ def make_races():
 
 
                     if len(actual_order) != 3:
+
                         continue
 
 
@@ -224,98 +333,95 @@ def make_races():
                     )
 
 
-                    # ==================================
+                    # ==============================
+                    # AI予想
+                    # ==============================
+
+                    ranking = sorted(
+
+                        boats,
+
+                        key=lambda boat:
+                            calculate_score(
+                                boat
+                            ),
+
+                        reverse=True
+
+                    )
+
+
+                    predicted = tuple(
+                        boat["entry_number"]
+                        for boat in ranking
+                    )
+
+
+                    predicted_top3 = predicted[:3]
+
+                    top1 = predicted[0]
+
+                    top1_score = calculate_score(
+                        ranking[0]
+                    )
+
+                    top2_score = calculate_score(
+                        ranking[1]
+                    )
+
+                    score_gap = (
+                        top1_score
+                        - top2_score
+                    )
+
+
+                    # ==============================
                     # 3連単払戻
-                    # ==================================
+                    # ==============================
 
-                    trifecta_payout = 0
-
-                    payouts = result.get(
-                        "payouts",
-                        {}
+                    trifecta_payout = (
+                        get_trifecta_payout(
+                            result,
+                            actual_top3
+                        )
                     )
-
-                    trifecta = payouts.get(
-                        "trifecta",
-                        []
-                    )
-
-
-                    if isinstance(
-                        trifecta,
-                        list
-                    ):
-
-                        for payout in trifecta:
-
-                            combination = str(
-                                payout.get(
-                                    "combination",
-                                    ""
-                                )
-                            ).replace(
-                                "-",
-                                ""
-                            ).replace(
-                                " ",
-                                ""
-                            )
-
-                            amount = payout.get(
-                                "amount",
-                                0
-                            )
-
-                            try:
-
-                                amount = int(
-                                    amount
-                                )
-
-                            except:
-
-                                amount = 0
-
-
-                            predicted_string = "".join(
-                                str(x)
-                                for x in actual_top3
-                            )
-
-
-                            if combination == predicted_string:
-
-                                trifecta_payout = amount
-
-                                break
 
 
                     races.append({
 
-                        "date": current,
-
-                        "stadium_number":
-                            stadium_number,
+                        "stadium":
+                            str(stadium_number),
 
                         "race_number":
-                            race_number,
+                            int(race_number),
 
-                        "boats":
-                            boats,
+                        "predicted":
+                            predicted,
+
+                        "top1":
+                            top1,
+
+                        "top3":
+                            predicted_top3,
 
                         "actual_top3":
                             actual_top3,
 
-                        "trifecta_payout":
+                        "score_gap":
+                            score_gap,
+
+                        "payout":
                             trifecta_payout,
 
                     })
+
 
         except Exception as e:
 
             print(
                 f"解析エラー {current}: {e}"
             )
+
 
         current += timedelta(days=1)
 
@@ -340,7 +446,7 @@ def make_races():
     )
 
     print(
-        f"レース数: {len(races)}"
+        f"分析レース数: {len(races)}"
     )
 
     print()
@@ -349,203 +455,95 @@ def make_races():
 
 
 # ==========================================
-# AIスコア
+# 指標計算
 # ==========================================
 
-def calculate_score(
-    boat,
-    weights
-):
+def calculate_metrics(races):
 
-    national_weight = weights[0]
-    local_weight = weights[1]
-    motor_weight = weights[2]
-    st_weight = weights[3]
-    lane_bonus = weights[4]
+    total = len(races)
 
+    if total == 0:
 
-    score = 0
+        return {
 
+            "count": 0,
+            "win_rate": 0,
+            "place3_rate": 0,
+            "trifecta_rate": 0,
+            "investment": 0,
+            "payout": 0,
+            "return_rate": 0,
+            "profit": 0,
 
-    score += (
-        boat["national_win_rate"]
-        * national_weight
-    )
+        }
 
-
-    score += (
-        boat["local_win_rate"]
-        * local_weight
-    )
-
-
-    score += (
-        boat["motor_top_2_percent"]
-        * motor_weight
-    )
-
-
-    score += (
-        (
-            0.20
-            - boat["average_start_timing"]
-        )
-        * st_weight
-    )
-
-
-    if boat["entry_number"] == 1:
-
-        score += lane_bonus
-
-
-    return score
-
-
-# ==========================================
-# レース予想
-# ==========================================
-
-def predict_race(
-    race,
-    weights
-):
-
-    ranking = sorted(
-
-        race["boats"],
-
-        key=lambda boat:
-            calculate_score(
-                boat,
-                weights
-            ),
-
-        reverse=True
-
-    )
-
-
-    return tuple(
-
-        boat["entry_number"]
-
-        for boat in ranking
-
-    )
-
-
-# ==========================================
-# 回収率評価
-# ==========================================
-
-def evaluate_return(
-    races,
-    weights
-):
-
-    total_races = 0
 
     win_count = 0
 
     place3_count = 0
 
-    exact_count = 0
-
-    investment = 0
+    trifecta_count = 0
 
     payout = 0
 
 
     for race in races:
 
-        predicted = predict_race(
-            race,
-            weights
-        )
+        actual = race["actual_top3"]
+
+        top1 = race["top1"]
+
+        top3 = race["top3"]
 
 
-        predicted_top1 = predicted[0]
-
-        predicted_top3 = predicted[:3]
-
-        actual_top3 = race["actual_top3"]
-
-
-        # 本命1着
-        if predicted_top1 == actual_top3[0]:
+        if top1 == actual[0]:
 
             win_count += 1
 
 
-        # 本命3着以内
-        if predicted_top1 in actual_top3:
+        if top1 in actual:
 
             place3_count += 1
 
 
-        # 3連単完全一致
-        if predicted_top3 == actual_top3:
+        if top3 == actual:
 
-            exact_count += 1
+            trifecta_count += 1
 
-
-        # 1レース100円
-        investment += 100
+            payout += race["payout"]
 
 
-        # 完全一致なら払戻
-        if predicted_top3 == actual_top3:
+    investment = total * 100
 
-            payout += race[
-                "trifecta_payout"
-            ]
+    return_rate = 0
 
+    if investment > 0:
 
-        total_races += 1
-
-
-    if total_races == 0:
-
-        return {
-
-            "races": 0,
-
-            "win_rate": 0,
-
-            "place3_rate": 0,
-
-            "trifecta_rate": 0,
-
-            "investment": 0,
-
-            "payout": 0,
-
-            "return_rate": 0,
-
-            "profit": 0,
-
-        }
+        return_rate = (
+            payout
+            / investment
+            * 100
+        )
 
 
     return {
 
-        "races":
-            total_races,
+        "count":
+            total,
 
         "win_rate":
             win_count
-            / total_races
+            / total
             * 100,
 
         "place3_rate":
             place3_count
-            / total_races
+            / total
             * 100,
 
         "trifecta_rate":
-            exact_count
-            / total_races
+            trifecta_count
+            / total
             * 100,
 
         "investment":
@@ -555,15 +553,68 @@ def evaluate_return(
             payout,
 
         "return_rate":
-            payout
-            / investment
-            * 100,
+            return_rate,
 
         "profit":
             payout
             - investment,
 
     }
+
+
+# ==========================================
+# 表示
+# ==========================================
+
+def print_metrics(
+    title,
+    races
+):
+
+    metrics = calculate_metrics(
+        races
+    )
+
+    print()
+    print(
+        "-----------------------------------"
+    )
+
+    print(title)
+
+    print(
+        "-----------------------------------"
+    )
+
+    print(
+        f"レース数: "
+        f"{metrics['count']:,}"
+    )
+
+    print(
+        f"本命1着率: "
+        f"{metrics['win_rate']:.2f}%"
+    )
+
+    print(
+        f"本命3着内率: "
+        f"{metrics['place3_rate']:.2f}%"
+    )
+
+    print(
+        f"3連単完全一致率: "
+        f"{metrics['trifecta_rate']:.2f}%"
+    )
+
+    print(
+        f"回収率: "
+        f"{metrics['return_rate']:.2f}%"
+    )
+
+    print(
+        f"収支: "
+        f"{metrics['profit']:,.0f}円"
+    )
 
 
 # ==========================================
@@ -575,146 +626,340 @@ print(
     "==================================="
 )
 print(
-    "BOAT AI 回収率検証"
+    "BOAT AI 条件別分析"
 )
 print(
     "==================================="
 )
 print()
 
-
-# データ取得
-
-all_races = make_races()
+races = make_races()
 
 
 # ==========================================
-# 学習期間 / テスト期間
+# 全体
 # ==========================================
 
-train_races = [
+print(
+    "==================================="
+)
+print(
+    "① 全体"
+)
+print(
+    "==================================="
+)
 
-    race
+print_metrics(
+    "2026/7/1 ～ 9/19",
+    races
+)
 
-    for race in all_races
 
-    if race["date"] <= TRAIN_END
+# ==========================================
+# 競艇場別
+# ==========================================
+
+stadiums = sorted(
+    set(
+        race["stadium"]
+        for race in races
+    ),
+    key=lambda x: int(x)
+)
+
+
+print()
+print(
+    "==================================="
+)
+print(
+    "② 競艇場別"
+)
+print(
+    "==================================="
+)
+
+
+for stadium in stadiums:
+
+    stadium_races = [
+
+        race
+
+        for race in races
+
+        if race["stadium"] == stadium
+
+    ]
+
+
+    if len(stadium_races) < 100:
+
+        continue
+
+
+    metrics = calculate_metrics(
+        stadium_races
+    )
+
+
+    print(
+        f"{stadium}場 "
+        f"{metrics['count']}R "
+        f"1着 {metrics['win_rate']:.1f}% "
+        f"3着内 {metrics['place3_rate']:.1f}% "
+        f"3連単 {metrics['trifecta_rate']:.1f}% "
+        f"回収 {metrics['return_rate']:.1f}% "
+        f"収支 {metrics['profit']:,.0f}円"
+    )
+
+
+# ==========================================
+# 本命の号艇別
+# ==========================================
+
+print()
+print(
+    "==================================="
+)
+print(
+    "③ AI本命の号艇別"
+)
+print(
+    "==================================="
+)
+
+
+for boat_number in range(1, 7):
+
+    boat_races = [
+
+        race
+
+        for race in races
+
+        if race["top1"] == boat_number
+
+    ]
+
+
+    if len(boat_races) < 100:
+
+        continue
+
+
+    metrics = calculate_metrics(
+        boat_races
+    )
+
+
+    print(
+        f"{boat_number}号艇本命 "
+        f"{metrics['count']}R "
+        f"1着 {metrics['win_rate']:.1f}% "
+        f"3着内 {metrics['place3_rate']:.1f}% "
+        f"3連単 {metrics['trifecta_rate']:.1f}% "
+        f"回収 {metrics['return_rate']:.1f}% "
+        f"収支 {metrics['profit']:,.0f}円"
+    )
+
+
+# ==========================================
+# AIスコア差別
+# ==========================================
+
+print()
+print(
+    "==================================="
+)
+print(
+    "④ AIスコア差別"
+)
+print(
+    "==================================="
+)
+
+
+gap_groups = [
+
+    (
+        "0～5",
+        0,
+        5
+    ),
+
+    (
+        "5～10",
+        5,
+        10
+    ),
+
+    (
+        "10～20",
+        10,
+        20
+    ),
+
+    (
+        "20～30",
+        20,
+        30
+    ),
+
+    (
+        "30以上",
+        30,
+        999999
+    ),
 
 ]
 
 
-test_races = [
+for name, low, high in gap_groups:
+
+    group = [
+
+        race
+
+        for race in races
+
+        if low
+        <= race["score_gap"]
+        < high
+
+    ]
+
+
+    if len(group) < 100:
+
+        continue
+
+
+    metrics = calculate_metrics(
+        group
+    )
+
+
+    print(
+        f"スコア差 {name} "
+        f"{metrics['count']}R "
+        f"1着 {metrics['win_rate']:.1f}% "
+        f"3着内 {metrics['place3_rate']:.1f}% "
+        f"3連単 {metrics['trifecta_rate']:.1f}% "
+        f"回収 {metrics['return_rate']:.1f}% "
+        f"収支 {metrics['profit']:,.0f}円"
+    )
+
+
+# ==========================================
+# レース番号別
+# ==========================================
+
+print()
+print(
+    "==================================="
+)
+print(
+    "⑤ レース番号別"
+)
+print(
+    "==================================="
+)
+
+
+for race_number in range(1, 13):
+
+    group = [
+
+        race
+
+        for race in races
+
+        if race["race_number"]
+        == race_number
+
+    ]
+
+
+    if len(group) < 100:
+
+        continue
+
+
+    metrics = calculate_metrics(
+        group
+    )
+
+
+    print(
+        f"{race_number}R "
+        f"{metrics['count']}R "
+        f"1着 {metrics['win_rate']:.1f}% "
+        f"3着内 {metrics['place3_rate']:.1f}% "
+        f"3連単 {metrics['trifecta_rate']:.1f}% "
+        f"回収 {metrics['return_rate']:.1f}% "
+        f"収支 {metrics['profit']:,.0f}円"
+    )
+
+
+# ==========================================
+# 信頼度候補
+# ==========================================
+
+print()
+print(
+    "==================================="
+)
+print(
+    "⑥ 高信頼度候補"
+)
+print(
+    "==================================="
+)
+
+print(
+    "スコア差が大きいレースだけを"
+    "取り出した場合の参考値"
+)
+
+
+high_confidence = [
 
     race
 
-    for race in all_races
+    for race in races
 
-    if race["date"] >= TEST_START
+    if race["score_gap"] >= 20
 
 ]
 
 
-print(
-    "==================================="
-)
-print(
-    "期間"
-)
-print(
-    "==================================="
+print_metrics(
+    "スコア差20点以上",
+    high_confidence
 )
 
-print(
-    f"学習期間: "
-    f"{START_DATE} ～ {TRAIN_END}"
-)
 
-print(
-    f"テスト期間: "
-    f"{TEST_START} ～ {END_DATE}"
-)
+very_high_confidence = [
 
-print()
+    race
 
-print(
-    f"学習レース数: "
-    f"{len(train_races)}"
-)
+    for race in races
 
-print(
-    f"テストレース数: "
-    f"{len(test_races)}"
-)
+    if race["score_gap"] >= 30
 
-print()
+]
 
 
-# ==========================================
-# 最適化前
-# ==========================================
-
-baseline_weights = (
-
-    10.0,   # 全国勝率
-
-    8.0,    # 当地勝率
-
-    0.5,    # モーター
-
-    100.0,  # ST
-
-    15.0,   # 1号艇
-
+print_metrics(
+    "スコア差30点以上",
+    very_high_confidence
 )
 
 
 # ==========================================
-# 最適化後
-# ==========================================
-
-optimized_weights = (
-
-    8.804,   # 全国勝率
-
-    4.059,   # 当地勝率
-
-    0.417,   # モーター
-
-    117.952, # ST
-
-    25.603,  # 1号艇
-
-)
-
-
-# ==========================================
-# 最適化前のテスト
-# ==========================================
-
-baseline_result = evaluate_return(
-
-    test_races,
-
-    baseline_weights
-
-)
-
-
-# ==========================================
-# 最適化後のテスト
-# ==========================================
-
-optimized_result = evaluate_return(
-
-    test_races,
-
-    optimized_weights
-
-)
-
-
-# ==========================================
-# 結果表示
+# 終了
 # ==========================================
 
 print()
@@ -722,162 +967,7 @@ print(
     "==================================="
 )
 print(
-    "テスト期間：最適化前"
-)
-print(
-    "==================================="
-)
-
-print(
-    f"レース数: "
-    f"{baseline_result['races']}"
-)
-
-print(
-    f"本命1着率: "
-    f"{baseline_result['win_rate']:.2f}%"
-)
-
-print(
-    f"本命3着内率: "
-    f"{baseline_result['place3_rate']:.2f}%"
-)
-
-print(
-    f"3連単完全一致率: "
-    f"{baseline_result['trifecta_rate']:.2f}%"
-)
-
-print(
-    f"投資額: "
-    f"{baseline_result['investment']:,}円"
-)
-
-print(
-    f"払戻: "
-    f"{baseline_result['payout']:,}円"
-)
-
-print(
-    f"回収率: "
-    f"{baseline_result['return_rate']:.2f}%"
-)
-
-print(
-    f"収支: "
-    f"{baseline_result['profit']:,}円"
-)
-
-
-print()
-print(
-    "==================================="
-)
-print(
-    "テスト期間：最適化後"
-)
-print(
-    "==================================="
-)
-
-print(
-    f"レース数: "
-    f"{optimized_result['races']}"
-)
-
-print(
-    f"本命1着率: "
-    f"{optimized_result['win_rate']:.2f}%"
-)
-
-print(
-    f"本命3着内率: "
-    f"{optimized_result['place3_rate']:.2f}%"
-)
-
-print(
-    f"3連単完全一致率: "
-    f"{optimized_result['trifecta_rate']:.2f}%"
-)
-
-print(
-    f"投資額: "
-    f"{optimized_result['investment']:,}円"
-)
-
-print(
-    f"払戻: "
-    f"{optimized_result['payout']:,}円"
-)
-
-print(
-    f"回収率: "
-    f"{optimized_result['return_rate']:.2f}%"
-)
-
-print(
-    f"収支: "
-    f"{optimized_result['profit']:,}円"
-)
-
-
-# ==========================================
-# 比較
-# ==========================================
-
-print()
-print(
-    "==================================="
-)
-print(
-    "最適化前 → 最適化後"
-)
-print(
-    "==================================="
-)
-
-print(
-    f"本命1着率: "
-    f"{baseline_result['win_rate']:.2f}%"
-    f" → "
-    f"{optimized_result['win_rate']:.2f}%"
-)
-
-print(
-    f"本命3着内率: "
-    f"{baseline_result['place3_rate']:.2f}%"
-    f" → "
-    f"{optimized_result['place3_rate']:.2f}%"
-)
-
-print(
-    f"3連単完全一致率: "
-    f"{baseline_result['trifecta_rate']:.2f}%"
-    f" → "
-    f"{optimized_result['trifecta_rate']:.2f}%"
-)
-
-print(
-    f"回収率: "
-    f"{baseline_result['return_rate']:.2f}%"
-    f" → "
-    f"{optimized_result['return_rate']:.2f}%"
-)
-
-print(
-    f"収支: "
-    f"{baseline_result['profit']:,}円"
-    f" → "
-    f"{optimized_result['profit']:,}円"
-)
-
-
-print()
-print(
-    "==================================="
-)
-print(
-    "回収率検証終了"
+    "条件別分析終了"
 )
 print(
     "==================================="
