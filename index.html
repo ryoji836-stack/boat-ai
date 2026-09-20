@@ -232,27 +232,43 @@ const stadiumNames = {
 
 let data = null;
 
+
+/*
+  BOAT AI 最適化スコア
+
+  全国勝率        × 8.804
+  当地勝率        × 4.059
+  モーター2連対率 × 0.417
+  平均ST          × 117.952
+  1号艇ボーナス   + 25.603
+*/
+
 function calculateScore(boat) {
 
   let score = 0;
 
+  // 全国勝率
   score +=
-    (boat.national_win_rate || 0) * 10;
+    (boat.national_win_rate || 0) * 8.804;
 
+  // 当地勝率
   score +=
-    (boat.local_win_rate || 0) * 8;
+    (boat.local_win_rate || 0) * 4.059;
 
+  // モーター2連対率
   score +=
-    (boat.motor_top_2_percent || 0) * 0.5;
+    (boat.motor_top_2_percent || 0) * 0.417;
 
+  // 平均スタートタイミング
   const st =
     boat.average_start_timing || 0.20;
 
   score +=
-    (0.20 - st) * 100;
+    (0.20 - st) * 117.952;
 
+  // 1号艇ボーナス
   if (Number(boat.entry_number) === 1) {
-    score += 15;
+    score += 25.603;
   }
 
   return score;
@@ -294,7 +310,8 @@ async function loadData() {
       const number =
         stadiumNumber.padStart(2, "0");
 
-      option.value = stadiumNumber;
+      option.value =
+        stadiumNumber;
 
       option.textContent =
         stadiumNames[number] ||
@@ -315,7 +332,8 @@ async function loadData() {
     console.error(error);
 
     status.textContent =
-      "データ取得エラー: " + error.message;
+      "データ取得エラー: " +
+      error.message;
   }
 }
 
@@ -345,7 +363,8 @@ document
       const option =
         document.createElement("option");
 
-      option.value = raceNumber;
+      option.value =
+        raceNumber;
 
       option.textContent =
         raceNumber + "R";
@@ -359,7 +378,9 @@ function showPrediction() {
 
   if (!data) {
 
-    alert("データを読み込み中です。少し待ってください。");
+    alert(
+      "データを読み込み中です。少し待ってください。"
+    );
 
     return;
   }
@@ -378,7 +399,9 @@ function showPrediction() {
 
   if (!race) {
 
-    alert("レースデータがありません。");
+    alert(
+      "レースデータがありません。"
+    );
 
     return;
   }
@@ -404,7 +427,9 @@ function showPrediction() {
 
   if (boats.length === 0) {
 
-    alert("選択したレースの選手データがありません。");
+    alert(
+      "選択したレースの選手データがありません。"
+    );
 
     return;
   }
@@ -420,7 +445,9 @@ function showPrediction() {
   const top3 =
     ranking
       .slice(0, 3)
-      .map(boat => boat.entry_number)
+      .map(
+        boat => boat.entry_number
+      )
       .join(" → ");
 
   document
@@ -444,7 +471,8 @@ function showPrediction() {
     const div =
       document.createElement("div");
 
-    div.className = "boat";
+    div.className =
+      "boat";
 
     div.innerHTML =
       "<span>" +
