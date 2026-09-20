@@ -14,29 +14,24 @@ def calculate_score(boat):
 
     score = 0
 
-    # 全国勝率
+    # 最適化済み：全国勝率
+    score += boat.get("national_win_rate", 0) * 8.804
 
-    score += boat.get("national_win_rate", 0) * 10
+    # 最適化済み：当地勝率
+    score += boat.get("local_win_rate", 0) * 4.059
 
-    # 当地勝率
+    # 最適化済み：モーター2連対率
+    score += boat.get("motor_top_2_percent", 0) * 0.417
 
-    score += boat.get("local_win_rate", 0) * 8
-
-    # モーター2連対率
-
-    score += boat.get("motor_top_2_percent", 0) * 0.5
-
-    # 平均スタートが速いほど加点
-
+    # 最適化済み：平均スタート
     st = boat.get("average_start_timing", 0.2)
 
-    score += (0.20 - st) * 100
+    score += (0.20 - st) * 117.952
 
-    # 1号艇を少し加点
-
+    # 最適化済み：1号艇ボーナス
     if boat.get("entry_number") == 1:
 
-        score += 15
+        score += 25.603
 
     return score
 
