@@ -1,148 +1,184 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>BOAT AI</title>
+<title>BOAT AI</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0b1020;
-      color: white;
-    }
+body {
+  margin: 0;
+  background: #0b1020;
+  color: #ffffff;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
 
-    header {
-      padding: 24px 20px;
-      text-align: center;
-      background: #111a33;
-      border-bottom: 1px solid #26345c;
-    }
+header {
+  background: #111a33;
+  border-bottom: 1px solid #26345c;
+  padding: 22px 18px;
+}
 
-    header h1 {
-      margin: 0;
-      font-size: 30px;
-    }
+header h1 {
+  margin: 0;
+  font-size: 30px;
+}
 
-    header p {
-      margin: 8px 0 0;
-      color: #aab6d3;
-    }
+header p {
+  margin: 6px 0 0;
+  color: #aab6d3;
+  font-size: 14px;
+}
 
-    main {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 20px;
-    }
+main {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 18px;
+}
 
-    .card {
-      background: #121a31;
-      border: 1px solid #26345c;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
+.card {
+  background: #121a31;
+  border: 1px solid #26345c;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
 
-    .card h2 {
-      margin-top: 0;
-    }
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: #aab6d3;
+  font-size: 13px;
+}
 
-    label {
-      display: block;
-      margin-top: 15px;
-    }
+select,
+button {
+  width: 100%;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+}
 
-    select,
-    button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border-radius: 10px;
-      border: none;
-      font-size: 16px;
-    }
+select {
+  background: #0b1020;
+  color: white;
+  border: 1px solid #34446f;
+}
 
-    select {
-      background: #202b4a;
-      color: white;
-    }
+button {
+  margin-top: 16px;
+  border: 0;
+  background: #ffffff;
+  color: #0b1020;
+  font-weight: 700;
+}
 
-    button {
-      background: #2f7cff;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
+button:active {
+  transform: scale(0.98);
+}
 
-    button:disabled {
-      opacity: 0.6;
-    }
+.result {
+  display: none;
+}
 
-    .prediction {
-      display: none;
-      margin-top: 20px;
-    }
+.title {
+  color: #aab6d3;
+  font-size: 13px;
+}
 
-    .main-number {
-      font-size: 52px;
-      font-weight: bold;
-      text-align: center;
-      margin: 20px 0;
-    }
+.main-boat {
+  font-size: 38px;
+  font-weight: 800;
+  margin: 6px 0 16px;
+}
 
-    .top3 {
-      font-size: 24px;
-      text-align: center;
-      padding: 16px;
-      background: #202b4a;
-      border-radius: 12px;
-    }
+.trifecta {
+  font-size: 25px;
+  font-weight: 700;
+  margin: 8px 0;
+}
 
-    .ranking {
-      margin-top: 20px;
-    }
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
 
-    .boat {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px;
-      margin-top: 8px;
-      background: #202b4a;
-      border-radius: 10px;
-    }
+.info {
+  background: #0b1020;
+  border-radius: 12px;
+  padding: 14px;
+}
 
-    .note {
-      color: #8f9bb8;
-      font-size: 13px;
-      line-height: 1.6;
-      margin-top: 20px;
-    }
+.info small {
+  display: block;
+  color: #8d9aba;
+  margin-bottom: 5px;
+}
 
-    .status {
-      margin-top: 15px;
-      color: #aab6d3;
-      text-align: center;
-    }
+.info strong {
+  font-size: 18px;
+}
 
-    footer {
-      text-align: center;
-      padding: 30px 20px;
-      color: #6f7b99;
-      font-size: 12px;
-    }
-  </style>
+.boat-list {
+  margin-top: 12px;
+}
+
+.boat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0b1020;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 7px;
+}
+
+.boat-name {
+  font-weight: 700;
+}
+
+.score {
+  color: #cbd5f1;
+}
+
+.badge {
+  display: inline-block;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #26345c;
+  font-weight: 700;
+}
+
+.note {
+  color: #8d9aba;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.footer {
+  text-align: center;
+  color: #697694;
+  font-size: 12px;
+  padding: 20px 0 40px;
+}
+</style>
 </head>
 
 <body>
 
 <header>
-  <h1>🚤 BOAT AI</h1>
+  <h1>BOAT AI</h1>
   <p>競艇AI予想システム</p>
 </header>
 
@@ -150,351 +186,404 @@
 
   <div class="card">
 
-    <h2>今日のAI予想</h2>
-
     <label for="stadium">競艇場</label>
+
     <select id="stadium">
-      <option value="">読み込み中...</option>
+      <option value="">競艇場を選択</option>
+      <option value="01">桐生</option>
+      <option value="02">戸田</option>
+      <option value="03">江戸川</option>
+      <option value="04">平和島</option>
+      <option value="05">多摩川</option>
+      <option value="06">浜名湖</option>
+      <option value="07">蒲郡</option>
+      <option value="08">常滑</option>
+      <option value="09">津</option>
+      <option value="10">三国</option>
+      <option value="11">びわこ</option>
+      <option value="12">住之江</option>
+      <option value="13">尼崎</option>
+      <option value="14">鳴門</option>
+      <option value="15">丸亀</option>
+      <option value="16">児島</option>
+      <option value="17">宮島</option>
+      <option value="18">徳山</option>
+      <option value="19">下関</option>
+      <option value="20">若松</option>
+      <option value="21">芦屋</option>
+      <option value="22">福岡</option>
+      <option value="23">唐津</option>
+      <option value="24">大村</option>
     </select>
+
+    <br><br>
 
     <label for="race">レース</label>
+
     <select id="race">
-      <option value="">---</option>
+      <option value="">レースを選択</option>
     </select>
 
-    <button id="predictButton" onclick="showPrediction()">
+    <button onclick="showPrediction()">
       AI予想を見る
     </button>
 
-    <div id="status" class="status"></div>
+  </div>
 
-    <div id="prediction" class="prediction">
 
-      <h2>AI予想</h2>
+  <div id="result" class="result">
 
-      <div id="mainNumber" class="main-number">
-        ---
+    <div class="card">
+
+      <div class="title">AI本命</div>
+
+      <div id="mainBoat" class="main-boat">
+        -
       </div>
 
-      <div id="top3" class="top3">
-        AI上位3艇<br>
-        ---
+      <div id="confidence" class="badge">
+        -
       </div>
 
-      <div id="ranking" class="ranking"></div>
+      <div class="info-grid">
+
+        <div class="info">
+          <small>スコア差</small>
+          <strong id="gap">-</strong>
+        </div>
+
+        <div class="info">
+          <small>AI判定</small>
+          <strong id="judgement">-</strong>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="title">
+        3連単AI予想
+      </div>
+
+      <div id="trifecta" class="trifecta">
+        -
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="title">
+        AIランキング
+      </div>
+
+      <div id="boatList" class="boat-list">
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="title">
+        AIについて
+      </div>
 
       <p class="note">
-        ※AIスコアモデルによる試作版です。<br>
-        実際のレース結果や払戻を保証するものではありません。
+        BOAT AIは公開されている競艇データを利用し、
+        各艇のデータから独自のスコアを計算して予想順位を表示します。
+      </p>
+
+      <p class="note">
+        AI予想は将来の結果や利益を保証するものではありません。
       </p>
 
     </div>
 
   </div>
 
+  <div class="footer">
+    BOAT AI
+  </div>
+
 </main>
 
-<footer>
-  BOAT AI Prototype
-</footer>
 
 <script>
 
-const API_URL =
-  "https://boatraceopenapi.github.io/api/v1/today.json";
+/* ==========================================
+   サンプルレースデータ
+   ========================================== */
 
-const stadiumNames = {
-  "01": "桐生",
-  "02": "戸田",
-  "03": "江戸川",
-  "04": "平和島",
-  "05": "多摩川",
-  "06": "浜名湖",
-  "07": "蒲郡",
-  "08": "常滑",
-  "09": "津",
-  "10": "三国",
-  "11": "びわこ",
-  "12": "住之江",
-  "13": "尼崎",
-  "14": "鳴門",
-  "15": "丸亀",
-  "16": "児島",
-  "17": "宮島",
-  "18": "徳山",
-  "19": "下関",
-  "20": "若松",
-  "21": "芦屋",
-  "22": "福岡",
-  "23": "唐津",
-  "24": "大村"
+const raceData = {
+
+  "07": {
+
+    "1": [
+      [1, 78.5],
+      [2, 61.2],
+      [3, 55.8],
+      [4, 49.7],
+      [5, 43.5],
+      [6, 36.2]
+    ],
+
+    "2": [
+      [1, 65.2],
+      [2, 72.4],
+      [3, 58.1],
+      [4, 51.4],
+      [5, 45.3],
+      [6, 39.7]
+    ],
+
+    "3": [
+      [1, 70.4],
+      [2, 66.3],
+      [3, 60.2],
+      [4, 52.8],
+      [5, 43.6],
+      [6, 37.5]
+    ],
+
+    "4": [
+      [1, 68.1],
+      [2, 64.2],
+      [3, 57.4],
+      [4, 54.6],
+      [5, 45.2],
+      [6, 38.1]
+    ],
+
+    "5": [
+      [1, 73.2],
+      [2, 59.8],
+      [3, 57.7],
+      [4, 50.4],
+      [5, 44.1],
+      [6, 35.8]
+    ],
+
+    "6": [
+      [1, 76.3],
+      [2, 63.4],
+      [3, 56.7],
+      [4, 48.9],
+      [5, 42.3],
+      [6, 34.6]
+    ]
+
+  }
+
 };
 
-let data = null;
 
+/* ==========================================
+   レース選択
+   ========================================== */
 
-/*
-  BOAT AI 最適化スコア
+const raceSelect = document.getElementById("race");
 
-  全国勝率        × 8.804
-  当地勝率        × 4.059
-  モーター2連対率 × 0.417
-  平均ST          × 117.952
-  1号艇ボーナス   + 25.603
-*/
+for (let i = 1; i <= 12; i++) {
 
-function calculateScore(boat) {
+  const option = document.createElement("option");
 
-  let score = 0;
+  option.value = String(i);
 
-  // 全国勝率
-  score +=
-    (boat.national_win_rate || 0) * 8.804;
+  option.textContent = `${i}R`;
 
-  // 当地勝率
-  score +=
-    (boat.local_win_rate || 0) * 4.059;
+  raceSelect.appendChild(option);
 
-  // モーター2連対率
-  score +=
-    (boat.motor_top_2_percent || 0) * 0.417;
-
-  // 平均スタートタイミング
-  const st =
-    boat.average_start_timing || 0.20;
-
-  score +=
-    (0.20 - st) * 117.952;
-
-  // 1号艇ボーナス
-  if (Number(boat.entry_number) === 1) {
-    score += 25.603;
-  }
-
-  return score;
 }
 
 
-async function loadData() {
-
-  const status =
-    document.getElementById("status");
-
-  try {
-
-    status.textContent =
-      "今日の競艇データを取得中...";
-
-    const response =
-      await fetch(API_URL);
-
-    if (!response.ok) {
-      throw new Error("データ取得に失敗しました");
-    }
-
-    data = await response.json();
-
-    const stadiumSelect =
-      document.getElementById("stadium");
-
-    stadiumSelect.innerHTML = "";
-
-    const stadiums =
-      data.programs.stadiums;
-
-    for (const stadiumNumber of Object.keys(stadiums)) {
-
-      const option =
-        document.createElement("option");
-
-      const number =
-        stadiumNumber.padStart(2, "0");
-
-      option.value =
-        stadiumNumber;
-
-      option.textContent =
-        stadiumNames[number] ||
-        "競艇場 " + stadiumNumber;
-
-      stadiumSelect.appendChild(option);
-    }
-
-    stadiumSelect.dispatchEvent(
-      new Event("change")
-    );
-
-    status.textContent =
-      "データ取得完了！";
-
-  } catch (error) {
-
-    console.error(error);
-
-    status.textContent =
-      "データ取得エラー: " +
-      error.message;
-  }
-}
-
-
-document
-  .getElementById("stadium")
-  .addEventListener("change", function() {
-
-    if (!data) return;
-
-    const stadiumNumber =
-      this.value;
-
-    const stadium =
-      data.programs.stadiums[stadiumNumber];
-
-    const raceSelect =
-      document.getElementById("race");
-
-    raceSelect.innerHTML = "";
-
-    const races =
-      stadium.races || {};
-
-    for (const raceNumber of Object.keys(races)) {
-
-      const option =
-        document.createElement("option");
-
-      option.value =
-        raceNumber;
-
-      option.textContent =
-        raceNumber + "R";
-
-      raceSelect.appendChild(option);
-    }
-  });
-
+/* ==========================================
+   AI予想
+   ========================================== */
 
 function showPrediction() {
 
-  if (!data) {
-
-    alert(
-      "データを読み込み中です。少し待ってください。"
-    );
-
-    return;
-  }
-
-  const stadiumNumber =
+  const stadium =
     document.getElementById("stadium").value;
 
-  const raceNumber =
+  const race =
     document.getElementById("race").value;
 
-  const stadium =
-    data.programs.stadiums[stadiumNumber];
+  if (!stadium || !race) {
 
-  const race =
-    stadium.races[raceNumber];
-
-  if (!race) {
-
-    alert(
-      "レースデータがありません。"
-    );
+    alert("競艇場とレースを選択してください。");
 
     return;
   }
 
-  const racers =
-    race.racers || {};
 
-  const boats = [];
+  /*
+   * 現段階では表示テスト用データ。
+   * 次の工程でAPIの実データと接続する。
+   */
 
-  for (const entryNumber in racers) {
+  let data;
 
-    const boat =
-      racers[entryNumber];
+  if (
+    raceData[stadium] &&
+    raceData[stadium][race]
+  ) {
 
-    boat.entry_number =
-      Number(entryNumber);
+    data = raceData[stadium][race];
 
-    boat.score =
-      calculateScore(boat);
+  } else {
 
-    boats.push(boat);
+    data = [
+      [1, 70],
+      [2, 62],
+      [3, 57],
+      [4, 51],
+      [5, 45],
+      [6, 39]
+    ];
+
   }
 
-  if (boats.length === 0) {
-
-    alert(
-      "選択したレースの選手データがありません。"
-    );
-
-    return;
-  }
 
   const ranking =
-    boats.sort(
-      (a, b) => b.score - a.score
+    data
+      .map(item => ({
+        boat: item[0],
+        score: item[1]
+      }))
+      .sort(
+        (a, b) => b.score - a.score
+      );
+
+
+  const gap =
+    ranking[0].score -
+    ranking[1].score;
+
+
+  let confidence;
+
+  if (gap >= 30) {
+
+    confidence = "高";
+
+  } else if (gap >= 20) {
+
+    confidence = "中";
+
+  } else if (gap >= 10) {
+
+    confidence = "低";
+
+  } else {
+
+    confidence = "見送り";
+
+  }
+
+
+  const recommended =
+    gap >= 20;
+
+
+  /* 本命 */
+
+  document.getElementById(
+    "mainBoat"
+  ).textContent =
+    `${ranking[0].boat}号艇`;
+
+
+  /* 信頼度 */
+
+  document.getElementById(
+    "confidence"
+  ).textContent =
+    `信頼度：${confidence}`;
+
+
+  /* スコア差 */
+
+  document.getElementById(
+    "gap"
+  ).textContent =
+    gap.toFixed(1);
+
+
+  /* 判定 */
+
+  document.getElementById(
+    "judgement"
+  ).textContent =
+    recommended
+      ? "推奨候補"
+      : "見送り";
+
+
+  /* 3連単 */
+
+  document.getElementById(
+    "trifecta"
+  ).textContent =
+    `${ranking[0].boat} → ${ranking[1].boat} → ${ranking[2].boat}`;
+
+
+  /* ランキング */
+
+  const list =
+    document.getElementById(
+      "boatList"
     );
 
-  const main =
-    ranking[0].entry_number;
+  list.innerHTML = "";
 
-  const top3 =
-    ranking
-      .slice(0, 3)
-      .map(
-        boat => boat.entry_number
-      )
-      .join(" → ");
 
-  document
-    .getElementById("mainNumber")
-    .textContent =
-      "🥇 " + main + "号艇";
+  ranking.forEach(
+    (boat, index) => {
 
-  document
-    .getElementById("top3")
-    .innerHTML =
-      "AI上位3艇<br>" + top3;
+      const div =
+        document.createElement(
+          "div"
+        );
 
-  const rankingElement =
-    document.getElementById("ranking");
+      div.className = "boat";
 
-  rankingElement.innerHTML =
-    "<h3>AIスコア順位</h3>";
+      div.innerHTML = `
+        <div class="boat-name">
+          ${index + 1}位　${boat.boat}号艇
+        </div>
 
-  ranking.forEach((boat, index) => {
+        <div class="score">
+          ${boat.score.toFixed(1)}
+        </div>
+      `;
 
-    const div =
-      document.createElement("div");
+      list.appendChild(div);
 
-    div.className =
-      "boat";
+    }
+  );
 
-    div.innerHTML =
-      "<span>" +
-      (index + 1) +
-      "位　" +
-      boat.entry_number +
-      "号艇</span>" +
-      "<span>" +
-      boat.score.toFixed(1) +
-      "</span>";
 
-    rankingElement.appendChild(div);
+  /* 結果表示 */
+
+  document.getElementById(
+    "result"
+  ).style.display =
+    "block";
+
+
+  window.scrollTo({
+    top: document.getElementById(
+      "result"
+    ).offsetTop - 10,
+    behavior: "smooth"
   });
 
-  document
-    .getElementById("prediction")
-    .style.display =
-      "block";
 }
-
-
-loadData();
 
 </script>
 
